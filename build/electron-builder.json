@@ -13,6 +13,7 @@
     "icon": "node_modules/@electerm/electerm-resource/build/icons-win.ico",
     "publish": {
       "provider": "github",
+      "releaseType": "release",
       "channel": "${env.WORKFLOW_NAME}"
     }
   },
@@ -63,6 +64,7 @@
     "icon": "node_modules/@electerm/electerm-resource/build/icons.icns",
     "publish": {
       "provider": "github",
+      "releaseType": "release",
       "channel": "${env.WORKFLOW_NAME}"
     },
     "hardenedRuntime": true,
@@ -96,6 +98,7 @@
     ],
     "publish": {
       "provider": "github",
+      "releaseType": "release",
       "channel": "${env.WORKFLOW_NAME}"
     }
   },
@@ -103,6 +106,7 @@
     "confinement": "classic",
     "publish": {
       "provider": "github",
+      "releaseType": "release",
       "channel": "${env.WORKFLOW_NAME}"
     }
   },
