@@ -18,48 +18,56 @@ export default function renderQm () {
   const focused = useRef(0)
   function renderItem (field, i, add, remove) {
     return (
-      <Space.Compact
-        align='center'
+      <div
         className='width-100 mg2b'
         key={field.key}
       >
-        <Space.Addon>{e('delay')}</Space.Addon>
-        <FormItem
-          label=''
-          name={[field.name, 'delay']}
-          required
-          noStyle
+        <Space.Compact
+          align='center'
+          className='width-100 mg1b'
         >
-          <InputNumber
-            min={1}
-            step={1}
-            max={65535}
-            placeholder={100}
-            className='compact-input'
-            suffix='ms'
-          />
-        </FormItem>
-        <FormItem
-          label=''
-          name={[field.name, 'command']}
-          required
-          className='mg2x'
-          noStyle
+          <Space.Addon>{e('delay')}</Space.Addon>
+          <FormItem
+            label=''
+            name={[field.name, 'delay']}
+            required
+            noStyle
+          >
+            <InputNumber
+              min={1}
+              step={1}
+              max={65535}
+              placeholder={100}
+              className='compact-input'
+              suffix='ms'
+            />
+          </FormItem>
+        </Space.Compact>
+        <Space.Compact
+          align='center'
+          className='width-100'
         >
-          <Input.TextArea
-            autoSize={{ minRows: 1 }}
-            placeholder={e('quickCommand')}
-            className='compact-input qm-input'
-            onFocus={() => {
-              focused.current = i
-            }}
+          <FormItem
+            label=''
+            name={[field.name, 'command']}
+            required
+            noStyle
+          >
+            <Input.TextArea
+              autoSize={{ minRows: 1 }}
+              placeholder={e('quickCommand')}
+              className='compact-input qm-input'
+              onFocus={() => {
+                focused.current = i
+              }}
+            />
+          </FormItem>
+          <Button
+            icon={<MinusCircleOutlined />}
+            onClick={() => remove(field.name)}
           />
-        </FormItem>
-        <Button
-          icon={<MinusCircleOutlined />}
-          onClick={() => remove(field.name)}
-        />
-      </Space.Compact>
+        </Space.Compact>
+      </div>
     )
   }
   const commonCmds = [
