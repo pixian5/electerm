@@ -115,6 +115,15 @@ export default function QuickCommandForm (props) {
         layout='vertical'
         initialValues={initialValues}
       >
+        <FormItem>
+          <p>
+            <Button
+              type='primary'
+              htmlType='submit'
+            >{e('save')}
+            </Button>
+          </p>
+        </FormItem>
         <FormItem
           label={e('quickCommandName')}
           rules={[{
@@ -163,15 +172,6 @@ export default function QuickCommandForm (props) {
           valuePropName='checked'
         >
           <Switch />
-        </FormItem>
-        <FormItem>
-          <p>
-            <Button
-              type='primary'
-              htmlType='submit'
-            >{e('save')}
-            </Button>
-          </p>
         </FormItem>
         <p>
           <b className='mg1r'>{e('templates')}:</b>
