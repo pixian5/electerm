@@ -1,0 +1,135 @@
+# This workflow builds electerm for multiple platforms after each push to master
+# It can also be triggered manually via workflow_dispatch
+
+name: build-all-platforms
+
+on:
+  push:
+    branches: [ master ]
+  workflow_dispatch:
+
+jobs:
+  build-linux:
+    name: Linux (deb/tar)
+    runs-on: ubuntu-24.04
+    environment: build
+    if: ${{ !contains(github.event.head_commit.message, '[skip build]') && !contains(github.event.head_commit.message, '[skip ci]') && !contains(github.event.head_commit.message, '[skip linux]') }}
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Use Node.js 22.x
+      uses: actions/setup-node@v4
+      with:
+        node-version: 22.x
+    - run: npm config set legacy-peer-deps true
+    - run: npm install -g yarn
+    - run: npm i
+    - run: npm run b
+    - name: Run pb
+      run: npm run pb
+    - name: build
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        BUILD_NUMBER: ${{ secrets.BUILD_NUMBER }}
+        WORKFLOW_NAME: ${{ github.workflow }}
+      run: node build/bin/build-linux-deb-tar
+
+  build-mac-x64:
+    name: macOS (x64)
+    runs-on: macos-15-intel
+    environment: build
+    if: ${{ !contains(github.event.head_commit.message, '[skip build]') && !contains(github.event.head_commit.message, '[skip ci]') && !contains(github.event.head_commit.message, '[skip mac]') }}
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Use Node.js 22.x
+      uses: actions/setup-node@v4
+      with:
+        node-version: 22.x
+    - uses: actions/setup-python@v5
+      with:
+        python-version: '3.10'
+    - run: npm config set legacy-peer-deps true
+    - run: npm install -g yarn
+    - run: npm i
+    - run: npm run b
+    - name: Run pb
+      run: npm run pb
+    - name: build
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        BUILD_NUMBER: ${{ secrets.BUILD_NUMBER }}
+        CSC_LINK: ${{ secrets.CSC_LINK }}
+        CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+        APPLE_ID: ${{ secrets.APPLEID }}
+        APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLEIDPASS }}
+        APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        WORKFLOW_NAME: ${{ github.workflow }}
+      run: node build/bin/build-mac
+
+  build-mac-arm:
+    name: macOS (ARM)
+    runs-on: macos-15
+    environment: build
+    if: ${{ !contains(github.event.head_commit.message, '[skip build]') && !contains(github.event.head_commit.message, '[skip ci]') && !contains(github.event.head_commit.message, '[skip mac]') && !contains(github.event.head_commit.message, '[skip arm]') }}
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Use Node.js 22.x
+      uses: actions/setup-node@v4
+      with:
+        node-version: 22.x
+    - uses: actions/setup-python@v5
+      with:
+        python-version: '3.10'
+    - run: pip install setuptools
+    - run: npm config set legacy-peer-deps true
+    - run: npm install -g yarn
+    - run: npm i
+    - run: npm run b
+    - name: Run pb
+      run: npm run pb
+    - name: build
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        BUILD_NUMBER: ${{ secrets.BUILD_NUMBER }}
+        CSC_LINK: ${{ secrets.CSC_LINK }}
+        CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+        APPLE_ID: ${{ secrets.APPLEID }}
+        APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLEIDPASS }}
+        APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        WORKFLOW_NAME: ${{ github.workflow }}
+      run: node build/bin/build-mac-arm
+
+  build-windows:
+    name: Windows (NSIS)
+    runs-on: windows-2022
+    environment: build
+    if: ${{ !contains(github.event.head_commit.message, '[skip build]') && !contains(github.event.head_commit.message, '[skip ci]') && !contains(github.event.head_commit.message, '[skip win]') }}
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Use Node.js 22.x
+      uses: actions/setup-node@v4
+      with:
+        node-version: 22.x
+    - uses: actions/setup-python@v5
+      with:
+        python-version: '3.7'
+        architecture: 'x64'
+    - run: npm config set legacy-peer-deps true
+    - run: npm install -g node-gyp
+    - run: npm install -g yarn
+    - run: npm un node-pty serialport
+    - run: npm i
+    - run: npm i -S -E node-pty@1.1.0-beta14
+    - run: npm i -S -E serialport@13.0.0
+    - run: npm run b
+    - name: Run pb
+      run: npm run pb
+    - name: build
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        BUILD_NUMBER: ${{ secrets.BUILD_NUMBER }}
+        WORKFLOW_NAME: ${{ github.workflow }}
+      run: node build/bin/build-win-nsis
