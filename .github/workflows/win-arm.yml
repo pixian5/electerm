@@ -24,6 +24,13 @@ jobs:
     - uses: actions/setup-python@v5
       with:
         python-version: '3.12'
+
+    - name: Cache electron-builder binaries
+      uses: actions/cache@v4
+      with:
+        path: ~\AppData\Local\electron-builder\cache
+        key: electron-builder-cache-${{ runner.os }}-${{ runner.arch }}-winCodeSign-2.6.0
+
     - run: npm config set legacy-peer-deps true
     - run: npm install -g node-gyp
 
