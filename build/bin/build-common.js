@@ -11,12 +11,19 @@ const { rm, mv } = require('shelljs')
 exports.run = function (cmd) {
   return new Promise((resolve, reject) => {
     console.log('Executing command:', cmd)
+    const env = {
+      ...process.env,
+      DEBUG: 'electron-builder:*',
+      ELECTRON_BUILDER_CACHE: process.env.ELECTRON_BUILDER_CACHE || ''
+    }
+    // Remove empty signing env vars to prevent electron-builder from resolving
+    // empty string paths to the CWD, which causes "not a file" errors
+    if (!env.CSC_LINK) delete env.CSC_LINK
+    if (!env.CSC_KEY_PASSWORD) delete env.CSC_KEY_PASSWORD
+    if (!env.WIN_CSC_LINK) delete env.WIN_CSC_LINK
+    if (!env.WIN_CSC_KEY_PASSWORD) delete env.WIN_CSC_KEY_PASSWORD
     const childProcess = exec(cmd, {
-      env: {
-        ...process.env,
-        DEBUG: 'electron-builder:*',
-        ELECTRON_BUILDER_CACHE: process.env.ELECTRON_BUILDER_CACHE || ''
-      },
+      env,
       maxBuffer: 1024 * 1024 * 50 // 50MB buffer for large debug output
     }, (err, stdout, stderr) => {
       // Always log stdout and stderr regardless of success/failure
