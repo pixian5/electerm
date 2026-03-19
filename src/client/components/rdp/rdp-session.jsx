@@ -20,6 +20,7 @@ import scanCode from './code-scan'
 import resolutions from './resolutions'
 import { readClipboardAsync } from '../../common/clipboard'
 import RemoteFloatControl from '../common/remote-float-control'
+import './rdp.styl'
 
 const { Option } = Select
 
@@ -338,10 +339,29 @@ export default class RdpSession extends PureComponent {
       if (!this.session) return
       try {
         const rect = canvas.getBoundingClientRect()
-        const scaleX = canvas.width / rect.width
-        const scaleY = canvas.height / rect.height
-        const x = Math.round((e.clientX - rect.left) * scaleX)
-        const y = Math.round((e.clientY - rect.top) * scaleY)
+        const { scaleViewport } = this.state
+        let scaleX = canvas.width / rect.width
+        let scaleY = canvas.height / rect.height
+        let offsetX = 0
+        let offsetY = 0
+        if (scaleViewport) {
+          const containerRatio = rect.width / rect.height
+          const canvasRatio = canvas.width / canvas.height
+          let renderWidth, renderHeight
+          if (containerRatio > canvasRatio) {
+            renderHeight = rect.height
+            renderWidth = rect.height * canvasRatio
+            offsetX = (rect.width - renderWidth) / 2
+          } else {
+            renderWidth = rect.width
+            renderHeight = rect.width / canvasRatio
+            offsetY = (rect.height - renderHeight) / 2
+          }
+          scaleX = canvas.width / renderWidth
+          scaleY = canvas.height / renderHeight
+        }
+        const x = Math.round((e.clientX - rect.left - offsetX) * scaleX)
+        const y = Math.round((e.clientY - rect.top - offsetY) * scaleY)
         const event = window.ironRdp.DeviceEvent.mouseMove(x, y)
         const tx = new window.ironRdp.InputTransaction()
         tx.addEvent(event)
@@ -538,7 +558,7 @@ export default class RdpSession extends PureComponent {
     }
     return (
       <div
-        className='pd1 fix session-v-info'
+        className='pd1 fix session-v-info block'
       >
         <div className='fleft'>
           <ReloadOutlined
@@ -600,40 +620,44 @@ export default class RdpSession extends PureComponent {
 
   render () {
     const { width: w, height: h } = this.props
-    const rdpProps = {
-      style: {
-        width: w + 'px',
-        height: h + 'px'
-      }
-    }
     const { width, height, loading, scaleViewport } = this.state
+    const innerWidth = w - 10
+    const innerHeight = h - 80
+    const wrapperStyle = {
+      width: innerWidth + 'px',
+      height: innerHeight + 'px',
+      overflow: scaleViewport ? 'hidden' : 'auto'
+    }
     const canvasProps = {
       width,
       height,
       tabIndex: 0
     }
-    if (scaleViewport) {
-      Object.assign(canvasProps, {
-        style: {
-          width: '100%',
-          objectFit: 'contain'
-        }
-      })
+    const cls = `rdp-session-wrap session-v-wrap${scaleViewport ? ' scale-viewport' : ''}`
+    const sessProps = {
+      className: cls,
+      style: {
+        width: w + 'px',
+        height: h + 'px'
+      }
     }
-    const cls = 'rdp-session-wrap session-v-wrap'
     const controlProps = this.getControlProps()
     return (
       <Spin spinning={loading}>
         <div
-          {...rdpProps}
-          className={cls}
+          {...sessProps}
         >
           {this.renderControl()}
-          <canvas
-            {...canvasProps}
-            ref={this.canvasRef}
-          />
           <RemoteFloatControl {...controlProps} />
+          <div
+            style={wrapperStyle}
+            className='rdp-scroll-wrapper s-scroll-wrapper'
+          >
+            <canvas
+              {...canvasProps}
+              ref={this.canvasRef}
+            />
+          </div>
         </div>
       </Spin>
     )

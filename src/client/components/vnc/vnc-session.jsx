@@ -18,6 +18,7 @@ import Modal from '../common/modal'
 import { copy } from '../../common/clipboard'
 import VncForm from './vnc-form'
 import RemoteFloatControl from '../common/remote-float-control'
+import './vnc.styl'
 
 // noVNC module imports — loaded dynamically
 async function loadVncModule () {
@@ -372,6 +373,9 @@ export default class VncSession extends PureComponent {
     }
     rfb.scaleViewport = scaleViewport
     rfb.clipViewport = clipViewport
+    rfb.qualityLevel = qualityLevel
+    rfb.compressionLevel = compressionLevel
+    rfb.viewOnly = viewOnly
     this.rfb = rfb
   }
 
@@ -602,14 +606,17 @@ export default class VncSession extends PureComponent {
       className: 'vnc-session-wrap session-v-wrap'
     }
     const contrlProps = this.getControlProps()
+    const sessProps = {
+      className: 'vnc-session-wrap',
+      style: {
+        width: w + 'px',
+        height: h + 'px'
+      }
+    }
     return (
       <Spin spinning={loading}>
         <div
-          className='rdp-session-wrap pd1'
-          style={{
-            width: w + 'px',
-            height: h + 'px'
-          }}
+          {...sessProps}
         >
           {this.renderControl()}
           <RemoteFloatControl

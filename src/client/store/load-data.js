@@ -13,6 +13,7 @@ import { initWsCommon } from '../common/fetch-from-server'
 import safeParse from '../common/parse-json-safe'
 import initWatch from './watch'
 import { refsStatic } from '../components/common/ref'
+import { parseQuickConnect } from '../common/parse-quick-connect'
 
 function getHost (argv, opts) {
   const arr = argv
@@ -219,7 +220,10 @@ export default (Store) => {
   Store.prototype.checkPendingDeepLink = async function () {
     const pending = await window.pre.runGlobalAsync('getPendingDeepLink')
     if (pending) {
-      addTabFromCommandLine(window.store, pending)
+      window.store.addTab(pending)
     }
+  }
+  Store.prototype.parseQuickConnect = function (url) {
+    return parseQuickConnect(url)
   }
 }

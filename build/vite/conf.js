@@ -17,7 +17,6 @@ const manualChunks = (id) => {
       return 'react-vendor'
     }
     if (
-      id.includes('react-delta-hooks') ||
       id.includes('react-markdown')
     ) {
       return 'react-utils'
@@ -60,6 +59,9 @@ const manualChunks = (id) => {
     }
     if (id.includes('@xterm/addon-webgl')) {
       return 'xterm-addon-webgl'
+    }
+    if (id.includes('@xterm/addon-image')) {
+      return 'xterm-addon-image'
     }
     if (id.includes('@xterm/xterm')) {
       return 'xterm'

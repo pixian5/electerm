@@ -1,7 +1,7 @@
 const defaultSettings = require('./default-setting')
 
 module.exports = exports.default = {
-  keepaliveInterval: 0,
+  keepaliveInterval: 10000,
   rightClickSelectsWord: false,
   pasteWhenContextMenu: false,
   ctrlOrMetaOpenTerminalLink: false,
@@ -15,6 +15,7 @@ module.exports = exports.default = {
     lastUpdateTime: Date.now(),
     autoSync: false
   },
+  keyword2FA: 'verification code,otp,one-time,two-factor,2fa,totp,authenticator,duo,yubikey,security code,mfa,passcode',
 
   host: '127.0.0.1'
 }

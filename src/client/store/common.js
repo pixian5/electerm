@@ -345,13 +345,40 @@ export default Store => {
       return
     }
     const { terminalCommandHistory } = window.store
-    terminalCommandHistory.add(cmd)
+    const existing = terminalCommandHistory.get(cmd)
+    if (existing) {
+      // Use set() to trigger reactivity
+      terminalCommandHistory.set(cmd, {
+        count: existing.count + 1,
+        lastUseTime: new Date().toISOString()
+      })
+    } else {
+      terminalCommandHistory.set(cmd, {
+        count: 1,
+        lastUseTime: new Date().toISOString()
+      })
+    }
     if (terminalCommandHistory.size > 100) {
       // Delete oldest 20 items when history exceeds 100
-      const values = Array.from(terminalCommandHistory.values())
-      for (let i = 0; i < 20 && i < values.length; i++) {
-        terminalCommandHistory.delete(values[i])
+      const entries = Array.from(terminalCommandHistory.entries())
+      entries.sort((a, b) => new Date(a[1].lastUseTime).getTime() - new Date(b[1].lastUseTime).getTime())
+      for (let i = 0; i < 20 && i < entries.length; i++) {
+        terminalCommandHistory.delete(entries[i][0])
       }
     }
   })
+
+  Store.prototype.deleteCmdHistory = function (cmd) {
+    const { terminalCommandHistory } = window.store
+    terminalCommandHistory.delete(cmd)
+  }
+
+  Store.prototype.clearAllCmdHistory = function () {
+    window.store.terminalCommandHistory = new Map()
+  }
+
+  Store.prototype.runCmdFromHistory = function (cmd) {
+    window.store.runQuickCommand(cmd)
+    window.store.addCmdHistory(cmd)
+  }
 }

@@ -180,8 +180,9 @@ export class ZmodemClient extends TransferClientBase {
       this.currentTransfer.path = path
       // Call directly to ensure 100% is displayed immediately
       this._doWriteProgress(true)
-      // Add newline after completion
+      // Add newline after completion and reset row tracker for next file
       this.writeToTerminal('\r\n')
+      this._prevProgressRows = 0
     }
     this.currentTransfer = null
   }
@@ -212,20 +213,18 @@ export class ZmodemClient extends TransferClientBase {
     if (!this.currentTransfer || !this.terminal?.term) return
 
     const { name, size, transferred, path, serverSpeed } = this.currentTransfer
-    const percent = size > 0 ? Math.floor(transferred * 100 / size) : 100
-
-    // Use server's speed if available, otherwise calculate locally
     const speed = serverSpeed || 0
-
-    // Use full path if available, otherwise just name
     const displayName = path || name
-
-    // filesize expects bytes and formats to human readable
     const formatSize = (bytes) => filesize(bytes)
 
-    // Clear line and write progress
-    const str = `\r\x1b[2K\x1b[32m${displayName}\x1b[0m: ${percent}%, ${formatSize(transferred)}/${formatSize(size)}, ${formatSize(speed)}/s${isComplete ? ' \x1b[32m\x1b[1m[DONE]\x1b[0m' : ''}`
-    this.writeToTerminal(str + '\r')
+    this.writeProgressBar({
+      name: displayName,
+      size,
+      transferred,
+      speed,
+      isComplete,
+      formatSize
+    })
   }
 }
 

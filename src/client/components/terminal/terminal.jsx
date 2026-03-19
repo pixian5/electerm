@@ -57,7 +57,8 @@ import {
   loadWebglAddon,
   loadSearchAddon,
   loadLigaturesAddon,
-  loadUnicode11Addon
+  loadUnicode11Addon,
+  loadImageAddon
 } from './xterm-loader.js'
 
 const e = window.translate
@@ -81,7 +82,6 @@ class Term extends Component {
     this.currentInput = ''
     this.shellInjected = false
     this.shellType = null
-    this.manualCommandHistory = new Set()
   }
 
   domRef = createRef()
@@ -164,6 +164,7 @@ class Term extends Component {
     this.searchAddon = null
     this.fitAddon = null
     this.cmdAddon = null
+    this.imageAddon = null
     // Clear the notification if it exists
     if (this.socketCloseWarning) {
       notification.destroy(this.socketCloseWarning.key)
@@ -514,6 +515,15 @@ class Term extends Component {
     window.store.toggleTerminalSearch()
   }
 
+  toggleKeepalive = () => {
+    if (!this.attachAddon) {
+      return false
+    }
+    this._keepaliveEnabled = !this._keepaliveEnabled
+    this.attachAddon.setKeepalive(this._keepaliveEnabled)
+    return this._keepaliveEnabled
+  }
+
   onSearchResultsChange = ({ resultIndex, resultCount }) => {
     window.store.storeAssign({
       termSearchMatchCount: resultCount,
@@ -735,7 +745,6 @@ class Term extends Component {
     if (d === '\r' || d === '\n') {
       const currentCmd = this.getCurrentInput()
       if (currentCmd && currentCmd.trim() && this.shouldUseManualHistory()) {
-        this.manualCommandHistory.add(currentCmd.trim())
         window.store.addCmdHistory(currentCmd.trim())
       }
       this.closeSuggestions()
@@ -816,6 +825,19 @@ class Term extends Component {
     this.searchAddon.onDidChangeResults(this.onSearchResultsChange)
     const Unicode11Addon = await loadUnicode11Addon()
     const unicode11Addon = new Unicode11Addon()
+    if (config.enableSixel !== false) {
+      try {
+        const ImageAddon = await loadImageAddon()
+        this.imageAddon = new ImageAddon({
+          enableSizeReports: false,
+          sixelSupport: true,
+          iipSupport: false
+        })
+        term.loadAddon(this.imageAddon)
+      } catch (err) {
+        console.error('load sixel addon failed', err)
+      }
+    }
     term.loadAddon(unicode11Addon)
     term.loadAddon(ligtureAddon)
     term.unicode.activeVersion = '11'
@@ -888,9 +910,7 @@ class Term extends Component {
   }
 
   shouldUseManualHistory = () => {
-    const useManual = this.props.config.showCmdSuggestions &&
-      (this.shellType === 'sh' || (isWin && this.isLocal()))
-    return useManual
+    return !this.cmdAddon || !this.cmdAddon.hasShellIntegration()
   }
 
   canInjectShellIntegration = () => {
@@ -1063,6 +1083,33 @@ class Term extends Component {
     const { savePassword } = this.state
     const termType = type
     const extra = this.props.sessionOptions
+    // Determine if this is a local terminal (no host)
+    const isLocalType = !tab.host
+    // Build exec settings: only for local type, prefer tab settings over config
+    let execOpts = {}
+    let execPropName = 'execLinux'
+    if (isWin) {
+      execPropName = 'execWindows'
+    } else if (isMac) {
+      execPropName = 'execMac'
+    }
+    if (isLocalType) {
+      // Check flat properties on tab first (bookmark data), then fall back to config
+      if (tab[execPropName]) {
+        // Use bookmark's exec setting directly
+        execOpts = {
+          [execPropName]: tab[execPropName],
+          [`${execPropName}Args`]: tab[`${execPropName}Args`] || []
+        }
+      } else if (config[execPropName]) {
+        // Use global config exec settings
+        execOpts = {
+          [execPropName]: config[execPropName],
+          [`${execPropName}Args`]: config[`${execPropName}Args`] || []
+        }
+      }
+    }
+    const keepaliveInterval = tab.keepaliveInterval || config.keepaliveInterval
     const opts = clone({
       cols,
       rows,
@@ -1070,21 +1117,16 @@ class Term extends Component {
       saveTerminalLogToFile: config.saveTerminalLogToFile,
       ...tab,
       ...extra,
+      ...execOpts,
       logName,
       sessionLogPath: config.sessionLogPath || createDefaultLogPath(),
       ...pick(config, [
         'addTimeStampToTermLog',
-        'keepaliveInterval',
         'keepaliveCountMax',
-        'execWindows',
-        'execMac',
-        'execLinux',
-        'execWindowsArgs',
-        'execMacArgs',
-        'execLinuxArgs',
+        'keyword2FA',
         'debug'
       ]),
-      keepaliveInterval: tab.keepaliveInterval || config.keepaliveInterval,
+      keepaliveInterval,
       tabId: id,
       uid: id,
       srcTabId: tab.id,

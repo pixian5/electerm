@@ -3,26 +3,20 @@
  */
 
 import { useEffect } from 'react'
-import { useDelta, useConditionalEffect } from 'react-delta-hooks'
-import eq from 'fast-deep-equal'
 
 const themeDomId = 'custom-css'
 
 export default function CustomCss (props) {
-  const { customCss } = props
-
-  const delta = useDelta(customCss)
-
-  async function applyTheme () {
-    const style = document.getElementById(themeDomId)
-    style.innerHTML = customCss
-  }
+  const { customCss, configLoaded } = props
 
   useEffect(() => {
-    applyTheme()
-  }, [])
-  useConditionalEffect(() => {
-    applyTheme()
-  }, delta && !eq(delta.prev, delta.curr))
+    if (configLoaded) {
+      const style = document.getElementById(themeDomId)
+      if (style) {
+        style.innerHTML = customCss || ''
+      }
+    }
+  }, [customCss, configLoaded])
+
   return null
 }

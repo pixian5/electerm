@@ -14,6 +14,7 @@ import Resolutions from '../rdp/resolution-edit'
 import TerminalInteractive from '../terminal/terminal-interactive'
 import ConfirmModalStore from '../file-transfer/conflict-resolve.jsx'
 import TransferQueue from '../file-transfer/transfer-queue'
+import Remote2RemoteHandlers from '../file-transfer/remote2remote-handlers.jsx'
 import TerminalCmdSuggestions from '../terminal/terminal-command-dropdown'
 import TransportsActionStore from '../file-transfer/transports-action-store.jsx'
 import classnames from 'classnames'
@@ -32,6 +33,7 @@ import Opacity from '../common/opacity'
 import MoveItemModal from '../tree-list/move-item-modal'
 import InputContextMenu from '../common/input-context-menu'
 import WorkspaceSaveModal from '../tabs/workspace-save-modal'
+import BookmarkFromHistoryModal from '../bookmark-form/bookmark-from-history-modal'
 import { pick } from 'lodash-es'
 import deepCopy from 'json-deep-copy'
 import './wrapper.styl'
@@ -47,6 +49,7 @@ export default auto(function Index (props) {
     ipcOnEvent('open-about', store.openAbout)
     ipcOnEvent('new-ssh', store.onNewSsh)
     ipcOnEvent('add-tab-from-command-line', store.addTabFromCommandLine)
+    ipcOnEvent('open-tab', (e, parsed) => store.addTab(parsed))
     ipcOnEvent('openSettings', store.openSetting)
     ipcOnEvent('selectall', store.selectall)
     ipcOnEvent('focused', store.focus)
@@ -83,7 +86,6 @@ export default auto(function Index (props) {
     pinned,
     isSecondInstance,
     pinnedQuickCommandBar,
-    wsInited,
     installSrc,
     fileTransfers,
     uiThemeConfig,
@@ -245,14 +247,14 @@ export default auto(function Index (props) {
         <ShortcutControl config={config} />
         <CssOverwrite
           {...confsCss}
-          wsInited={wsInited}
+          configLoaded={configLoaded}
         />
         <Opacity opacity={config.opacity} />
         <TerminalInteractive />
         <UiTheme
           {...themeProps}
         />
-        <CustomCss customCss={config.customCss} />
+        <CustomCss customCss={config.customCss} configLoaded={configLoaded} />
         <TextEditor />
         <UpdateCheck
           skipVersion={config.skipVersion}
@@ -278,6 +280,7 @@ export default auto(function Index (props) {
           {...conflictStoreProps}
           config={config}
         />
+        <Remote2RemoteHandlers />
         <Resolutions {...resProps} />
         <InfoModal {...infoModalProps} />
         <RightSidePanel {...rightPanelProps}>
@@ -293,6 +296,7 @@ export default auto(function Index (props) {
         <TerminalCmdSuggestions {...cmdSuggestionsProps} />
         <TransferQueue />
         <WorkspaceSaveModal store={store} />
+        <BookmarkFromHistoryModal />
         <NotificationContainer />
       </div>
     </ConfigProvider>
