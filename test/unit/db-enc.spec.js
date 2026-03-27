@@ -115,7 +115,7 @@ describe('sqlite createDb', () => {
     })
 
     test('inserted bookmarks data is encrypted on disk', async () => {
-      const doc = { host: 'secret.com', password: 'hunter2' }
+      const doc = { host: 'secret-host-value', password: 'hunter2' }
       const inserted = await db.dbAction('bookmarks', 'insert', doc)
       assert.ok(inserted._id)
 
@@ -123,12 +123,12 @@ describe('sqlite createDb', () => {
       const dbPath = path.join(dbFolder, 'electerm.db')
       const raw = fs.readFileSync(dbPath, 'latin1')
       assert.ok(!raw.includes('hunter2'), 'raw db should NOT contain plaintext password')
-      assert.ok(!raw.includes('secret.com'), 'raw db should NOT contain plaintext host')
+      assert.ok(!raw.includes('secret-host-value'), 'raw db should NOT contain plaintext host')
     })
 
     test('find returns decrypted data', async () => {
       const results = await db.dbAction('bookmarks', 'find')
-      const found = results.find(r => r.host === 'secret.com')
+      const found = results.find(r => r.host === 'secret-host-value')
       assert.ok(found, 'should find the document with decrypted host')
       assert.equal(found.password, 'hunter2')
     })
@@ -266,7 +266,7 @@ describe('nedb createDb', () => {
     })
 
     test('inserted bookmarks data is encrypted on disk', async () => {
-      const doc = { host: 'secret.com', password: 'hunter2' }
+      const doc = { host: 'secret-host-value', password: 'hunter2' }
       const inserted = await db.dbAction('bookmarks', 'insert', doc)
       assert.ok(inserted._id)
 
@@ -276,12 +276,12 @@ describe('nedb createDb', () => {
       )
       const raw = fs.readFileSync(nedbPath, 'utf8')
       assert.ok(!raw.includes('hunter2'), 'nedb file should NOT contain plaintext password')
-      assert.ok(!raw.includes('secret.com'), 'nedb file should NOT contain plaintext host')
+      assert.ok(!raw.includes('secret-host-value'), 'nedb file should NOT contain plaintext host')
     })
 
     test('find returns decrypted data', async () => {
       const results = await db.dbAction('bookmarks', 'find', {})
-      const found = results.find(r => r.host === 'secret.com')
+      const found = results.find(r => r.host === 'secret-host-value')
       assert.ok(found, 'should find the document with decrypted host')
       assert.equal(found.password, 'hunter2')
     })
