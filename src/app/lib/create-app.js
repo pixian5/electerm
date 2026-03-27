@@ -14,6 +14,8 @@ const {
 const { handleSingleInstance } = require('./single-instance')
 const log = require('../common/log')
 
+let conf = {}
+
 // GPU error suggestion message
 const GPU_ERROR_SUGGESTION = `
 ================================================================================
@@ -105,7 +107,6 @@ exports.createApp = async function () {
 
   const progs = initCommandLine()
   const opts = progs?.options
-  const conf = await getDbConfig()
   globalState.set('serverPort', opts?.serverPort)
 
   const { allowMultiInstance = false } = conf
@@ -128,8 +129,12 @@ exports.createApp = async function () {
     app.requestSingleInstanceLock()
   }
 
-  app.on('second-instance', () => {
-    // Just focus the window - data is handled via socket
+  app.on('second-instance', (event, commandLine) => {
+    const newWindowFlag = commandLine.includes('--new-window')
+    if (newWindowFlag) {
+      createWindow(conf)
+      return
+    }
     const win = globalState.get('win')
     if (win) {
       if (win.isMinimized()) {
@@ -138,7 +143,10 @@ exports.createApp = async function () {
       win.focus()
     }
   })
-  app.whenReady().then(() => createWindow(conf))
+  app.whenReady().then(async () => {
+    conf = await getDbConfig()
+    createWindow(conf)
+  })
   app.on('activate', () => {
     // On macOS it's common to re-create a window in the app when the
     // dock icon is clicked and there are no other windows open.
