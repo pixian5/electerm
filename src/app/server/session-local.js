@@ -5,7 +5,6 @@
 const { resolve: pathResolve } = require('path')
 const { TerminalBase } = require('./session-base')
 const globalState = require('./global-state')
-
 // const { MockBinding } = require('@serialport/binding-mock')
 // MockBinding.createPort('/dev/ROBOT', { echo: true, record: true })
 
@@ -37,13 +36,14 @@ class TerminalLocal extends TerminalBase {
     const cwd = process.env[platform === 'win32' ? 'USERPROFILE' : 'HOME']
     const argv = platform.startsWith('darwin') ? ['--login', ...arg] : arg
     const pty = require('node-pty')
+    const env = Object.assign({}, process.env)
     this.term = pty.spawn(exec, argv, {
       name: term,
       encoding: null,
       cols: cols || 80,
       rows: rows || 24,
       cwd,
-      env: process.env
+      env
     })
     this.term.termType = termType
     globalState.setSession(this.pid, this)

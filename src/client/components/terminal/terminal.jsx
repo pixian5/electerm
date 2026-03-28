@@ -22,7 +22,8 @@ import {
   typeMap,
   isWin,
   rendererTypes,
-  isMac
+  isMac,
+  isMacJs
 } from '../../common/constants.js'
 import deepCopy from 'json-deep-copy'
 import { readClipboardAsync, readClipboard, copy } from '../../common/clipboard.js'
@@ -479,9 +480,9 @@ class Term extends Component {
     this.term.focus()
   }
 
-  // onSelectAll = () => {
-  //   this.term.selectAll()
-  // }
+  onSelectAll = () => {
+    this.term.selectAll()
+  }
 
   onClear = () => {
     this.term.clear()
@@ -570,7 +571,7 @@ class Term extends Component {
     const pasteShortcut = this.getShortcut('terminal_paste')
     const clearShortcut = this.getShortcut('terminal_clear')
     const searchShortcut = this.getShortcut('terminal_search')
-
+    const selectAllShortcut = isMacJs ? 'meta+a' : 'ctrl+shift+a'
     return [
       {
         key: 'onCopy',
@@ -591,6 +592,13 @@ class Term extends Component {
         icon: <iconsMap.SwitcherOutlined />,
         label: e('pasteSelected'),
         disabled: !hasSelection
+      },
+      {
+
+        key: 'onSelectAll',
+        icon: <iconsMap.CheckSquareOutlined />,
+        label: e('selectall'),
+        extra: selectAllShortcut
       },
       {
         key: 'explainWithAi',
@@ -825,25 +833,19 @@ class Term extends Component {
     this.searchAddon.onDidChangeResults(this.onSearchResultsChange)
     const Unicode11Addon = await loadUnicode11Addon()
     const unicode11Addon = new Unicode11Addon()
-    if (config.enableSixel !== false) {
-      try {
-        const ImageAddon = await loadImageAddon()
-        this.imageAddon = new ImageAddon({
-          enableSizeReports: false,
-          sixelSupport: true,
-          iipSupport: false
-        })
-        term.loadAddon(this.imageAddon)
-      } catch (err) {
-        console.error('load sixel addon failed', err)
-      }
-    }
     term.loadAddon(unicode11Addon)
     term.loadAddon(ligtureAddon)
     term.unicode.activeVersion = '11'
     term.loadAddon(this.fitAddon)
     term.loadAddon(this.searchAddon)
     term.loadAddon(this.cmdAddon)
+    if (tab.enableTerminalImage) {
+      const ImageAddon = await loadImageAddon()
+      this.imageAddon = new ImageAddon({
+        pixelLimit: 33554432
+      })
+      term.loadAddon(this.imageAddon)
+    }
     term.onData(this.onData)
     this.term = term
     term.onSelectionChange(this.onSelectionChange)
